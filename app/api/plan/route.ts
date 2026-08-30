@@ -35,7 +35,7 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
         'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'openai/gpt-oss-20b',
         messages: [
           {
             role: 'system',
