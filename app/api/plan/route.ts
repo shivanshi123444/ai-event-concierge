@@ -28,7 +28,7 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
   "why_it_fits": "2-3 sentences explaining exactly why this venue matches their specific needs, mentioning relevant features like capacity, amenities, setting, and value for budget."
 }`;
 
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const callGroq = () => fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -48,9 +48,19 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
         ],
         temperature: 0.7,
         max_tokens: 1024,
-        reasoning_effort: 'low',
-        response_format: { type: 'json_object' }
+        reasoning_effort: 'low'
+      })
     });
+
+    let groqRes = await callGroq();
+
+    // Groq's gpt-oss models intermittently fail with a transient error.
+    // One quiet retry absorbs this without surfacing an error to the user.
+    if (!groqRes.ok) {
+      const firstErr = await groqRes.text();
+      console.warn('Groq API failed once, retrying:', firstErr);
+      groqRes = await callGroq();
+    }
 
     if (!groqRes.ok) {
       const err = await groqRes.text();
