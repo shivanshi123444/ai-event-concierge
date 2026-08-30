@@ -47,7 +47,8 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
           }
         ],
         temperature: 0.7,
-        max_tokens: 512
+        max_tokens: 512,
+        response_format: { type: 'json_object' }
       })
     });
 
@@ -58,11 +59,23 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
     }
 
     const groqData = await groqRes.json();
-    const rawText = groqData.choices[0].message.content;
+    const rawText = groqData?.choices?.[0]?.message?.content;
+
+    if (!rawText) {
+      console.error('Unexpected Groq response shape:', JSON.stringify(groqData));
+      return NextResponse.json({ error: 'Unexpected AI response', detail: groqData }, { status: 500 });
+    }
 
     // Strip any accidental markdown backticks
     const cleaned = rawText.replace(/```json|```/g, '').trim();
-    const proposal = JSON.parse(cleaned);
+
+    let proposal;
+    try {
+      proposal = JSON.parse(cleaned);
+    } catch (parseErr) {
+      console.error('JSON parse failed. Raw AI output:', rawText);
+      return NextResponse.json({ error: 'AI returned invalid JSON', detail: rawText }, { status: 500 });
+    }
 
     // Save to Supabase
     const { error: dbError } = await supabase.from('searches').insert({
