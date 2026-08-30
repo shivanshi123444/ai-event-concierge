@@ -46,10 +46,10 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 512,
+               temperature: 0.7,
+        max_tokens: 1024,
+        reasoning_effort: 'low',
         response_format: { type: 'json_object' }
-      })
     });
 
     if (!groqRes.ok) {
