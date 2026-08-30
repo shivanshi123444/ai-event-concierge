@@ -52,20 +52,28 @@ Return ONLY a valid JSON object with NO markdown, NO backticks, NO extra text â€
       })
     });
 
-    let groqRes = await callGroq();
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    // Groq's gpt-oss models intermittently fail with a transient error.
-    // One quiet retry absorbs this without surfacing an error to the user.
-    if (!groqRes.ok) {
-      const firstErr = await groqRes.text();
-      console.warn('Groq API failed once, retrying:', firstErr);
+    let groqRes: Response | null = null;
+    let lastErr = '';
+    const MAX_ATTEMPTS = 3;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       groqRes = await callGroq();
+
+      if (groqRes.ok) break;
+
+      lastErr = await groqRes.text();
+      console.warn(`Groq API attempt ${attempt} failed:`, lastErr);
+
+      if (attempt < MAX_ATTEMPTS) {
+        await sleep(300 * attempt); // small increasing backoff: 300ms, 600ms
+      }
     }
 
-    if (!groqRes.ok) {
-      const err = await groqRes.text();
-      console.error('Groq API error:', err);
-      return NextResponse.json({ error: 'Groq API failed', detail: err }, { status: 500 });
+    if (!groqRes || !groqRes.ok) {
+      console.error('Groq API error after retries:', lastErr);
+      return NextResponse.json({ error: 'Groq API failed', detail: lastErr }, { status: 500 });
     }
 
     const groqData = await groqRes.json();
