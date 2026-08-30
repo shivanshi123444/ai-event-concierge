@@ -1,8 +1,3 @@
-<img width="1802" height="852" alt="image" src="https://github.com/user-attachments/assets/24168579-dcca-4745-b234-c941394ab381" /># AI Event Concierge 🏨
-
-An AI-powered full-stack web app that generates corporate event venue proposals from natural language descriptions.
-
-**Live Demo:** https://your-app.vercel.app
 
 ---
 
